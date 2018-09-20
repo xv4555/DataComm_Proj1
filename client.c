@@ -62,14 +62,15 @@ int main(int argc, char *argv[])
 
     // prepend #name: to name
     char* name = argv[3];
+    printf("Name before prepending: %s\n", name);
     prepend(name, "#name:");
+    printf("Name after prepending: %s\n", name);
 
     // prepend #password: to password
     char* password = argv[4];
+    printf("Password before prepending: %s\n", password);
     prepend(password, "#password:");
-
-    //concatenate name and password
-    strncat(name, password, (sizeof(name) - strlen(password)) );
+    printf("Password after prepending: %s\n", password);
 
     int fd = 0;
     char buff[1024];
@@ -111,10 +112,15 @@ int main(int argc, char *argv[])
     // send name and password
     printf("Sending name and password...\n");
 
+    //put name&password into buff and null terminate it
+    strncpy(buff, name, sizeof(buff));
+    strncat(buff, password, (sizeof(buff) - strlen(password)) );
+    buff[sizeof(buff)-1] = '\0';
+
     // copy the name (which is the concatenated name & password)
     // char* into the char[] for sending
-    strncpy(buff, name, sizeof(buff - 1));
-    buff[sizeof(buff)-1] = '\0';
+    // strncpy(buff, name, sizeof(buff - 1));
+    // buff[sizeof(buff)-1] = '\0';
 
     // send the char[] with the name
     in = send(fd,buff,strlen(buff),0);
