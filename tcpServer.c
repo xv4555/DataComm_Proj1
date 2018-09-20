@@ -7,6 +7,21 @@
 #include <netinet/in.h>
 #include <arpa/inet.h>
 
+char* deblank(char* input)                                         
+{
+    int i,j;
+    char *output=input;
+    for (i = 0, j = 0; i<strlen(input); i++,j++)          
+    {
+        if (input[i]!=' ' && input[i]!='\n')                           
+            output[j]=input[i];                     
+        else
+            j--;                                     
+    }
+    output[j]=0;
+    return output;
+}
+
 int main(int argc, char** argv){
 	struct Node 
 	{ 
@@ -63,13 +78,15 @@ int main(int argc, char** argv){
 
 			while(1){
 				recv(newSocket, buffer, 1024, 0);
-				if(strcmp(buffer, ":exit") == 0){
+				
+				if(strcmp(deblank(buffer), "#EXIT") == 0){
 					printf("Disconnected from %s:%d\n", inet_ntoa(newAddr.sin_addr), ntohs(newAddr.sin_port));
 					break;
 				}else{
-					printf("Client: %s\n", buffer);
-					send(newSocket, buffer, strlen(buffer), 0);
+					// printf("Client: %s\n", buffer);
+					send(newSocket, deblank(buffer), strlen(buffer), 0);
 					bzero(buffer, sizeof(buffer));
+					printf("%s", deblank(buffer));
 				}
 			}
 		}
@@ -81,3 +98,5 @@ int main(int argc, char** argv){
 
 	return 0;
 }
+
+
