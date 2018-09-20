@@ -18,7 +18,7 @@ int main(int argc, char** argv){
 	int sockfd, ret, newSocket;
 	int port = atoi(argv[1]);   //Check for Error
 	int num_clients = atoi(argv[2]);   // Check for Errors
-	struct sockaddr_in servAddr;
+	struct sockaddr_in serverAddr;
 	struct sockaddr_in newAddr;
 	socklen_t addr_size;
 	char buffer[1024];
