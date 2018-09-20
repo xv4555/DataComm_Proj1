@@ -123,7 +123,7 @@ int main(int argc, char *argv[])
         bzero(buff,256);
         fgets(buff,255,stdin);
 
-        printf("\nSending to SERVER: %s ",buff);
+        printf("\nSending to SERVER: %s ", buff);
 
         /* Send message to the server */
         in = send(fd,buff,strlen(buff),0);
@@ -133,6 +133,17 @@ int main(int argc, char *argv[])
             return 0;
         }
         
+        // check if user put "#EXIT" and exit.
+        if(buff[0] == '#' &&
+           buff[1] == 'E' &&
+           buff[2] == 'X' &&
+           buff[3] == 'I' &&
+           buff[4] == 'T')
+        {
+            printf("Bye! Thanks for chatting!\n", );
+            return 1;
+        }
+
         /* Now read server response */
         bzero(buff,256);
         in = recv(fd,buff,255,0);
