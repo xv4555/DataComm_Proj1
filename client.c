@@ -38,20 +38,6 @@ char* deblank(char* input)
     return output;
 }
 
-// function for prepending strings
-void prepend(char* s, const char* t)
-{
-    size_t len = strlen(t);
-    size_t i;
-
-    memmove(s + len, s, strlen(s) + 1);
-
-    for (i = 0; i < len; ++i)
-    {
-        s[i] = t[i];
-    }
-}
-
 int main(int argc, char *argv[])
 {
     if (argc != 5)
@@ -60,17 +46,8 @@ int main(int argc, char *argv[])
         printf("None of the 4 required arguments should contain spaces.\n");
     }
 
-    // prepend #name: to name
     char* name = argv[3];
-    printf("Name before prepending: %s\n", name);
-    prepend(name, "#name:");
-    printf("Name after prepending: %s\n", name);
-
-    // prepend #password: to password
     char* password = argv[4];
-    printf("Password before prepending: %s\n", password);
-    prepend(password, "#password:");
-    printf("Password after prepending: %s\n", password);
 
     int fd = 0;
     char buff[1024];
@@ -112,17 +89,15 @@ int main(int argc, char *argv[])
     // send name and password
     printf("Sending name and password...\n");
 
-    //put name&password into buff and null terminate it
-    strncpy(buff, name, sizeof(buff));
+    //put name and password in the form:
+    // #name:<NAME>#password:<PASSWORD>
+    strcpy(buff, "#name:");
+    strncat(buff, name, (sizeof(buff) - strlen(name)));
+    strncat(buff, "#password:", (sizeof(buff) - strlen("#password:")) );
     strncat(buff, password, (sizeof(buff) - strlen(password)) );
     buff[sizeof(buff)-1] = '\0';
 
-    // copy the name (which is the concatenated name & password)
-    // char* into the char[] for sending
-    // strncpy(buff, name, sizeof(buff - 1));
-    // buff[sizeof(buff)-1] = '\0';
-
-    // send the char[] with the name
+    // send the buff char[] with the name/password
     in = send(fd,buff,strlen(buff),0);
     if (in < 0) 
     {
