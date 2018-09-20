@@ -24,65 +24,65 @@ char* deblank(char* input)
 }
 
 int main(int argc, char** argv){
-	struct Node 
-	{ 
-	    char *name;
-	  	char *password;
-	    struct Node *next; 
-	}; 
+    struct Node 
+    { 
+        char *name;
+        char *password;
+        struct Node *next; 
+    }; 
 
-	int sockfd, ret, newSocket;
-	int port = atoi(argv[1]);   //Check for Error
-	int num_clients = atoi(argv[2]);   // Check for Errors
-	struct sockaddr_in serverAddr;
-	struct sockaddr_in newAddr;
-	socklen_t addr_size;
-	char buffer[1024];
-	pid_t childpid;
+    int sockfd, ret, newSocket;
+    int port = atoi(argv[1]);   //Check for Error
+    int num_clients = atoi(argv[2]);   // Check for Errors
+    struct sockaddr_in serverAddr;
+    struct sockaddr_in newAddr;
+    socklen_t addr_size;
+    char buffer[1024];
+    pid_t childpid;
 
-	int opt = 1;
-	fd_set readfds;
-	int client_socket[30], activity, i , valread , sd, max_sd, addrlen, k;
+    int opt = 1;
+    fd_set readfds;
+    int client_socket[30], activity, i , valread , sd, max_sd, addrlen, k;
 
-	for (i = 0; i < num_clients; i++) 
+    for (i = 0; i < num_clients; i++) 
     {
         client_socket[i] = 0;
     }
 
-	sockfd = socket(AF_INET, SOCK_STREAM, 0);
-	if(sockfd < 0){
-		printf("Error in connection.\n");
-		exit(1);
-	}
+    sockfd = socket(AF_INET, SOCK_STREAM, 0);
+    if(sockfd < 0){
+        printf("Error in connection.\n");
+        exit(1);
+    }
 
-	if( setsockopt(sockfd, SOL_SOCKET, SO_REUSEADDR, (char *)&opt, sizeof(opt)) < 0 )
+    if( setsockopt(sockfd, SOL_SOCKET, SO_REUSEADDR, (char *)&opt, sizeof(opt)) < 0 )
     {
         perror("setsockopt");
         exit(EXIT_FAILURE);
     }
 
-	printf("Server Socket is created.\n");
-	memset(&serverAddr, '\0', sizeof(serverAddr));
-	serverAddr.sin_family = AF_INET;
-	serverAddr.sin_port = htons(port);
-	serverAddr.sin_addr.s_addr = htonl(INADDR_ANY);
+    printf("Server Socket is created.\n");
+    memset(&serverAddr, '\0', sizeof(serverAddr));
+    serverAddr.sin_family = AF_INET;
+    serverAddr.sin_port = htons(port);
+    serverAddr.sin_addr.s_addr = htonl(INADDR_ANY);
 
-	ret = bind(sockfd, (struct sockaddr*)&serverAddr, sizeof(serverAddr));
-	
-	if(ret < 0){
-		printf("Error in binding.\n");
-		exit(1);
-	}
+    ret = bind(sockfd, (struct sockaddr*)&serverAddr, sizeof(serverAddr));
+    
+    if(ret < 0){
+        printf("Error in binding.\n");
+        exit(1);
+    }
 
-	printf("Bind to port %d\n", port);
+    printf("Bind to port %d\n", port);
 
-	// if(listen(sockfd, num_clients) == 0){
-	// 	printf("Listening...\n");
-	// }else{
-	// 	printf("Error in binding.\n");
-	// }
+    // if(listen(sockfd, num_clients) == 0){
+    //  printf("Listening...\n");
+    // }else{
+    //  printf("Error in binding.\n");
+    // }
 
-	if (listen(sockfd, num_clients) < 0)
+    if (listen(sockfd, num_clients) < 0)
     {
         perror("listen");
         exit(EXIT_FAILURE);
@@ -91,9 +91,9 @@ int main(int argc, char** argv){
     addrlen = sizeof(serverAddr);
     puts("Waiting for connections ...");
 
-	while(1){
+    while(1){
 
-		//clear the socket set
+        //clear the socket set
         FD_ZERO(&readfds);
   
         //add master socket to set
@@ -134,7 +134,7 @@ int main(int argc, char** argv){
           
             //inform user of socket number - used in send and receive commands
             printf("New connection , socket fd is %d , ip is : %s , port : %d \n" , newSocket , inet_ntoa(serverAddr.sin_addr) , ntohs(serverAddr.sin_port));
-        	
+            
             //send new connection greeting message
             // if( send(newSocket, "hi", strlen("hi"), 0) != strlen("hi") ) 
             // {
@@ -169,7 +169,7 @@ int main(int argc, char** argv){
                 valread = read( sd , buffer, 1024);
                 if(valread == 0)
                 {
-                	printf("%s\n", buffer);
+                    printf("%s\n", buffer);
                     //Somebody disconnected , get his details and print
                     getpeername(sd , (struct sockaddr*)&serverAddr , (socklen_t*)&addrlen);
                     printf("Host disconnected , ip %s , port %d \n" , inet_ntoa(serverAddr.sin_addr) , ntohs(serverAddr.sin_port));
@@ -180,26 +180,26 @@ int main(int argc, char** argv){
                 }
                 buffer[valread] = '\0';
                 if (strstr(buffer, "#password:") != NULL && strstr(buffer, "#name:")) {
-					buffer[valread] = '\0';
-					send(sd , buffer , strlen(buffer) , 0 );
-               		bzero(buffer, sizeof(buffer));
-				}
-				else{
-					buffer[valread] = '\0';
+                    buffer[valread] = '\0';
+                    send(sd , buffer , strlen(buffer) , 0 );
+                    bzero(buffer, sizeof(buffer));
+                }
+                else{
+                    buffer[valread] = '\0';
 
 
-					// THIS IS THE SEND
-					for(k=0;k<num_clients;k++){
-						sd = client_socket[i];
-						//send message
-						printf("%s\n", buffer);
-						send(sd , buffer , strlen(buffer) , 0 );
-               			
-					}
-					bzero(buffer, sizeof(buffer));
-					
-				}
-			
+                    // THIS IS THE SEND
+                    for(k=0;k<num_clients;k++){
+                        sd = client_socket[k];
+                        //send message
+                        printf("Sending \"%s\" to client_socket[%d]\n", buffer, k);
+                        send(sd , buffer , strlen(buffer) , 0 );
+                        
+                    }
+                    bzero(buffer, sizeof(buffer));
+                    
+                }
+            
                 //set the string terminating NULL byte on the end of the data read
                 
                 
@@ -212,10 +212,8 @@ int main(int argc, char** argv){
    
 
 
-	}
+    }
 
 
-	return 0;
+    return 0;
 }
-
-
