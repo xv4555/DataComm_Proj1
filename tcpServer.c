@@ -6,6 +6,7 @@
 #include <sys/types.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
+#include <errno.h>
 
 char* deblank(char* input)                                         
 {
@@ -39,11 +40,27 @@ int main(int argc, char** argv){
 	char buffer[1024];
 	pid_t childpid;
 
+	int opt = 1;
+	fd_set readfds;
+	int client_socket[30], activity, i , valread , sd, max_sd, addrlen;
+
+	for (i = 0; i < num_clients; i++) 
+    {
+        client_socket[i] = 0;
+    }
+
 	sockfd = socket(AF_INET, SOCK_STREAM, 0);
 	if(sockfd < 0){
 		printf("Error in connection.\n");
 		exit(1);
 	}
+
+	if( setsockopt(sockfd, SOL_SOCKET, SO_REUSEADDR, (char *)&opt, sizeof(opt)) < 0 )
+    {
+        perror("setsockopt");
+        exit(EXIT_FAILURE);
+    }
+
 	printf("Server Socket is created.\n");
 	memset(&serverAddr, '\0', sizeof(serverAddr));
 	serverAddr.sin_family = AF_INET;
@@ -56,44 +73,148 @@ int main(int argc, char** argv){
 		printf("Error in binding.\n");
 		exit(1);
 	}
+
 	printf("Bind to port %d\n", port);
 
-	if(listen(sockfd, num_clients) == 0){
-		printf("Listening...\n");
-	}else{
-		printf("Error in binding.\n");
-	}
+	// if(listen(sockfd, num_clients) == 0){
+	// 	printf("Listening...\n");
+	// }else{
+	// 	printf("Error in binding.\n");
+	// }
 
+	if (listen(sockfd, num_clients) < 0)
+    {
+        perror("listen");
+        exit(EXIT_FAILURE);
+    }
 
+    addrlen = sizeof(serverAddr);
+    puts("Waiting for connections ...");
 
 	while(1){
-		newSocket = accept(sockfd, (struct sockaddr*)&newAddr, &addr_size);
-		if(newSocket < 0){
-			exit(1);
-		}
-		printf("Connection accepted from %s:%d\n", inet_ntoa(newAddr.sin_addr), ntohs(newAddr.sin_port));
 
-		if((childpid = fork()) == 0){
-			close(sockfd);
+		//clear the socket set
+        FD_ZERO(&readfds);
+  
+        //add master socket to set
+        FD_SET(sockfd, &readfds);
+        max_sd = sockfd;
 
-			while(1){
-				recv(newSocket, buffer, 1024, 0);
+        //add child sockets to set
+        for ( i = 0 ; i < num_clients ; i++) 
+        {
+            //socket descriptor
+            sd = client_socket[i];
+             
+            //if valid socket descriptor then add to read list
+            if(sd > 0)
+                FD_SET( sd , &readfds);
+             
+            //highest file descriptor number, need it for the select function
+            if(sd > max_sd)
+                max_sd = sd;
+        }
+  
+        //wait for an activity on one of the sockets , timeout is NULL , so wait indefinitely
+        activity = select( max_sd + 1 , &readfds , NULL , NULL , NULL);
+    
+        if ((activity < 0) && (errno!=EINTR)) 
+        {
+            printf("select error");
+        }
+
+        //If something happened on the master socket , then its an incoming connection
+        if (FD_ISSET(sockfd, &readfds)) 
+        {
+            if ((newSocket = accept(sockfd, (struct sockaddr *)&serverAddr, (socklen_t*)&addrlen))<0)
+            {
+                perror("accept");
+                exit(EXIT_FAILURE);
+            }
+          
+            //inform user of socket number - used in send and receive commands
+            printf("New connection , socket fd is %d , ip is : %s , port : %d \n" , newSocket , inet_ntoa(serverAddr.sin_addr) , ntohs(serverAddr.sin_port));
+        	
+            //send new connection greeting message
+            if( send(newSocket, "hi", strlen("hi"), 0) != strlen("hi") ) 
+            {
+                perror("send");
+            }
+
+              
+            puts("Welcome message sent successfully");
+              
+            //add new socket to array of sockets
+            for (i = 0; i < num_clients; i++) 
+            {
+                //if position is empty
+                if( client_socket[i] == 0 )
+                {
+                    client_socket[i] = newSocket;
+                    printf("Adding to list of sockets as %d\n" , i);
+                     
+                    break;
+                }
+            }
+        }
+
+         //else its some IO operation on some other socket :)
+        for (i = 0; i < num_clients; i++) 
+        {
+            sd = client_socket[i];
+              
+            if (FD_ISSET( sd , &readfds)) 
+            {
+                //Check if it was for closing , and also read the incoming message
+                if ((valread = read( sd , buffer, 1024)) == 0)
+                {
+                	printf("%s\n", buffer);
+                    //Somebody disconnected , get his details and print
+                    getpeername(sd , (struct sockaddr*)&serverAddr , (socklen_t*)&addrlen);
+                    printf("Host disconnected , ip %s , port %d \n" , inet_ntoa(serverAddr.sin_addr) , ntohs(serverAddr.sin_port));
+                      
+                    //Close the socket and mark as 0 in list for reuse
+                    close( sd );
+                    client_socket[i] = 0;
+                }
+                  
+                //Echo back the message that came in
+                else
+                {
+                	printf("%s\n", buffer);
+                    //set the string terminating NULL byte on the end of the data read
+                    buffer[valread] = '\0';
+                    send(sd , buffer , strlen(buffer) , 0 );
+                }
+            }
+        }
+   
+
+		// newSocket = accept(sockfd, (struct sockaddr*)&newAddr, &addr_size);
+		// if(newSocket < 0){
+		// 	exit(1);
+		// }
+		// printf("Connection accepted from %s:%d\n", inet_ntoa(newAddr.sin_addr), ntohs(newAddr.sin_port));
+
+		// if((childpid = fork()) == 0){
+		// 	close(sockfd);
+
+		// 	while(1){
+		// 		recv(newSocket, buffer, 1024, 0);
 				
-				if(strcmp(deblank(buffer), "#EXIT") == 0){
-					printf("Disconnected from %s:%d\n", inet_ntoa(newAddr.sin_addr), ntohs(newAddr.sin_port));
-					break;
-				}else{
-					// printf("Client: %s\n", buffer);
-					send(newSocket, deblank(buffer), strlen(buffer), 0);
-					bzero(buffer, sizeof(buffer));
-					printf("%s", deblank(buffer));
-				}
-			}
-		}
+		// 		if(strcmp(deblank(buffer), "#EXIT") == 0){
+		// 			printf("Disconnected from %s:%d\n", inet_ntoa(newAddr.sin_addr), ntohs(newAddr.sin_port));
+		// 			break;
+		// 		}else{
+		// 			// printf("Client: %s\n", buffer);
+		// 			send(newSocket, deblank(buffer), strlen(buffer), 0);
+		// 			bzero(buffer, sizeof(buffer));
+		// 			printf("%s", deblank(buffer));
+		// 		}
+		// 	}
+		// }
 
 	}
-
-	close(newSocket);
 
 
 	return 0;

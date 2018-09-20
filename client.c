@@ -6,6 +6,23 @@
 #include <stdlib.h>
 #include <unistd.h>
 
+int read_server_response(){
+    int fd = 0;
+    char buff[1024];
+    int in;
+
+    /* Now read server response */
+    bzero(buff,256);
+    in = recv(fd,buff,255,0);
+    if (in < 0) 
+    {
+        perror("\nClient Error: Reading from Server");
+        return 0;
+    }
+    printf("\nReceived FROM SERVER: %s ",buff);
+    return 1;
+}
+
 int main(int argc, char *argv[])
 {
     if (argc != 5)
@@ -119,11 +136,10 @@ int main(int argc, char *argv[])
     // infinite loop to send and read in messages
     while(1)
     {
-        printf("Please enter the message: ");
+        printf("\n>");
         bzero(buff,256);
         fgets(buff,255,stdin);
 
-        printf("\nSending to SERVER: %s ", buff);
 
         /* Send message to the server */
         in = send(fd,buff,strlen(buff),0);
@@ -140,7 +156,7 @@ int main(int argc, char *argv[])
            buff[3] == 'I' &&
            buff[4] == 'T')
         {
-            printf("Bye! Thanks for chatting!\n", );
+            printf("%s\n", "Bye! Thanks for chatting!");
             return 1;
         }
 
@@ -152,25 +168,9 @@ int main(int argc, char *argv[])
             perror("\nClient Error: Reading from Server");
             return 0;
         }
-        printf("\nReceived FROM SERVER: %s ",buff);
+        printf("%s",buff);
     }
     close(fd);
     return 0;
 }
 
-int read_server_response(){
-    int fd = 0;
-    char buff[1024];
-    int in;
-
-    /* Now read server response */
-    bzero(buff,256);
-    in = recv(fd,buff,255,0);
-    if (in < 0) 
-    {
-        perror("\nClient Error: Reading from Server");
-        return 0;
-    }
-    printf("\nReceived FROM SERVER: %s ",buff);
-    return 1;
-}
