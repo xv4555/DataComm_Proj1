@@ -42,7 +42,7 @@ int main(int argc, char** argv){
 
 	int opt = 1;
 	fd_set readfds;
-	int client_socket[30], activity, i , valread , sd, max_sd, addrlen;
+	int client_socket[30], activity, i , valread , sd, max_sd, addrlen, k;
 
 	for (i = 0; i < num_clients; i++) 
     {
@@ -178,14 +178,35 @@ int main(int argc, char** argv){
                     close( sd );
                     client_socket[i] = 0;
                 }
-
-                //set the string terminating NULL byte on the end of the data read
                 buffer[valread] = '\0';
+                if (strstr(buffer, "#password:") != NULL && strstr(buffer, "#name:")) {
+					buffer[valread] = '\0';
+					send(sd , buffer , strlen(buffer) , 0 );
+               		bzero(buffer, sizeof(buffer));
+				}
+				else{
+					buffer[valread] = '\0';
+
+
+					// THIS IS THE SEND
+					for(k=0;k<num_clients;k++){
+						sd = client_socket[i];
+						//send message
+						printf("%s\n", buffer);
+						send(sd , buffer , strlen(buffer) , 0 );
+               			
+					}
+					bzero(buffer, sizeof(buffer));
+					
+				}
+			
+                //set the string terminating NULL byte on the end of the data read
                 
-                printf("%i\n", valread);
-                printf("%s\n", buffer);
-                send(sd , buffer , strlen(buffer) , 0 );
-                bzero(buffer, sizeof(buffer));
+                
+                // printf("%i\n", valread);
+                // printf("%s\n", buffer);
+                // send(sd , buffer , strlen(buffer) , 0 );
+                // bzero(buffer, sizeof(buffer));
             }
         }
    
