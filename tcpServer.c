@@ -14,7 +14,7 @@ char* deblank(char* input)
     char *output=input;
     for (i = 0, j = 0; i<strlen(input); i++,j++)          
     {
-        if (input[i]!=' ' && input[i]!='\n')                           
+        if (input[i]!='\n')                           
             output[j]=input[i];                     
         else
             j--;                                     
@@ -136,10 +136,10 @@ int main(int argc, char** argv){
             printf("New connection , socket fd is %d , ip is : %s , port : %d \n" , newSocket , inet_ntoa(serverAddr.sin_addr) , ntohs(serverAddr.sin_port));
         	
             //send new connection greeting message
-            if( send(newSocket, "hi", strlen("hi"), 0) != strlen("hi") ) 
-            {
-                perror("send");
-            }
+            // if( send(newSocket, "hi", strlen("hi"), 0) != strlen("hi") ) 
+            // {
+            //     perror("send");
+            // }
 
               
             puts("Welcome message sent successfully");
@@ -166,7 +166,8 @@ int main(int argc, char** argv){
             if (FD_ISSET( sd , &readfds)) 
             {
                 //Check if it was for closing , and also read the incoming message
-                if ((valread = read( sd , buffer, 1024)) == 0)
+                valread = read( sd , buffer, 1024);
+                if(valread == 0)
                 {
                 	printf("%s\n", buffer);
                     //Somebody disconnected , get his details and print
@@ -177,42 +178,18 @@ int main(int argc, char** argv){
                     close( sd );
                     client_socket[i] = 0;
                 }
-                  
-                //Echo back the message that came in
-                else
-                {
-                	printf("%s\n", buffer);
-                    //set the string terminating NULL byte on the end of the data read
-                    buffer[valread] = '\0';
-                    send(sd , buffer , strlen(buffer) , 0 );
-                }
+
+                //set the string terminating NULL byte on the end of the data read
+                buffer[valread] = '\0';
+                
+                printf("%i\n", valread);
+                printf("%s\n", buffer);
+                send(sd , buffer , strlen(buffer) , 0 );
+                bzero(buffer, sizeof(buffer));
             }
         }
    
 
-		// newSocket = accept(sockfd, (struct sockaddr*)&newAddr, &addr_size);
-		// if(newSocket < 0){
-		// 	exit(1);
-		// }
-		// printf("Connection accepted from %s:%d\n", inet_ntoa(newAddr.sin_addr), ntohs(newAddr.sin_port));
-
-		// if((childpid = fork()) == 0){
-		// 	close(sockfd);
-
-		// 	while(1){
-		// 		recv(newSocket, buffer, 1024, 0);
-				
-		// 		if(strcmp(deblank(buffer), "#EXIT") == 0){
-		// 			printf("Disconnected from %s:%d\n", inet_ntoa(newAddr.sin_addr), ntohs(newAddr.sin_port));
-		// 			break;
-		// 		}else{
-		// 			// printf("Client: %s\n", buffer);
-		// 			send(newSocket, deblank(buffer), strlen(buffer), 0);
-		// 			bzero(buffer, sizeof(buffer));
-		// 			printf("%s", deblank(buffer));
-		// 		}
-		// 	}
-		// }
 
 	}
 

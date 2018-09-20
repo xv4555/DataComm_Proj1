@@ -23,6 +23,22 @@ int read_server_response(){
     return 1;
 }
 
+char* deblank(char* input)                                         
+{
+    int i,j;
+    char *output=input;
+    for (i = 0, j = 0; i<strlen(input); i++,j++)          
+    {
+        if (input[i]!='\n')                           
+            output[j]=input[i];                     
+        else
+            j--;                                     
+    }
+    output[j]=0;
+    return output;
+}
+
+
 int main(int argc, char *argv[])
 {
     if (argc != 5)
@@ -142,7 +158,7 @@ int main(int argc, char *argv[])
 
 
         /* Send message to the server */
-        in = send(fd,buff,strlen(buff),0);
+        in = send(fd,deblank(buff),strlen(buff),0);
         if (in < 0) 
         {
          perror("\nClient Error: Writing to Server");
