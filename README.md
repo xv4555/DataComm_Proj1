@@ -2,14 +2,17 @@
 Data Communications and Networks Project 1
 
 compile:
+
 gcc 351ChatClient.c -o 351ChatClient <br />
 gcc 351ChatServer.c -o 351ChatServer <br />
 
 example run:
+
 ./351ChatServer 8080 11 <br />
 ./351ChatClient 127.0.0.1 8080 NAME PASSWORD <br />
 
 Assumptions:
+
 name and password dont have spaces <br />
 name and password are each <=500 bytes <br />
 messages are <=1000 bytes <br />
