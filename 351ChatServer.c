@@ -31,9 +31,22 @@ int main(int argc, char** argv){
         struct Node *next; 
     }; 
 
+    if(argc != 3)
+    {
+        printf("Usage: ./351ChatServer <port> <num_clients>\n");
+        return 0;
+    }
+
     int sockfd, ret, newSocket;
     int port = atoi(argv[1]);   //Check for Error
     int num_clients = atoi(argv[2]);   // Check for Errors
+
+    if(num_clients <= 10)
+    {
+        printf("Usage: num_clients must be larger than 10\n");
+        return 0;
+    }
+
     struct sockaddr_in serverAddr;
     struct sockaddr_in newAddr;
     socklen_t addr_size;
