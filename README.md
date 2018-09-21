@@ -37,15 +37,15 @@ Server high level approach:
 
 Challenges:
 
--client reading input from stdin and messages from server at the same time
--data sent smaller than buffer size -> garbage data / trailing 0's
--preserving data for each client
+-client reading input from stdin and messages from server at the same time <br />
+-data sent smaller than buffer size -> garbage data / trailing 0's <br />
+-preserving data for each client <br />
 
 ---
 
 How we tested our code:
 
--ran the client/server with wrong/bad arguments
--ran the client without the server being up
--Ctrl+c quit the client program instead of #EXIT
--ran more than the max # of clients
+-ran the client/server with wrong/bad arguments <br />
+-ran the client without the server being up <br />
+-Ctrl+c quit the client program instead of #EXIT <br />
+-ran more than the max # of clients <br />
