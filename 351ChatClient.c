@@ -6,6 +6,7 @@
 #include <stdlib.h>
 #include <unistd.h>
 
+
 int read_server_response(){
     int fd = 0;
     char buff[1024];
@@ -115,19 +116,20 @@ int main(int argc, char *argv[])
         perror("\nClient Error: Reading from Server");
         return 0;
     }
-    printf("\nReceived FROM SERVER: %s ",buff);
+    // printf("\nReceived FROM SERVER: %s ",buff);
 
 
     // infinite loop to send and read in messages
     while(1)
     {
-        printf("\n>");
+        printf(">");
         bzero(buff,256);
         fgets(buff,255,stdin);
 
 
         /* Send message to the server */
         in = send(fd,deblank(buff),strlen(buff),0);
+      
         if (in < 0) 
         {
          perror("\nClient Error: Writing to Server");
@@ -146,8 +148,10 @@ int main(int argc, char *argv[])
         }
 
         /* Now read server response */
+        usleep(1500);
         bzero(buff,256);
         in = recv(fd,buff,255,0);
+
         if (in < 0) 
         {
             perror("\nClient Error: Reading from Server");

@@ -7,6 +7,7 @@
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <errno.h>
+#include <time.h>
 
 char* deblank(char* input)                                         
 {
@@ -31,6 +32,7 @@ int main(int argc, char** argv){
         struct Node *next; 
     }; 
 
+    char *newLine = "\n";
     if(argc != 3)
     {
         printf("Usage: ./351ChatServer <port> <num_clients>\n");
@@ -40,6 +42,8 @@ int main(int argc, char** argv){
     int sockfd, ret, newSocket;
     int port = atoi(argv[1]);   //Check for Error
     int num_clients = atoi(argv[2]);   // Check for Errors
+    struct tm *now_tm;
+    time_t now;
 
     if(num_clients <= 10)
     {
@@ -107,7 +111,7 @@ int main(int argc, char** argv){
     while(1){
 
         //clear the socket set
-        FD_ZERO(&readfds);
+        // FD_ZERO(&readfds);
   
         //add master socket to set
         FD_SET(sockfd, &readfds);
@@ -196,41 +200,46 @@ int main(int argc, char** argv){
                 buffer[valread] = '\0';
                 if (strstr(buffer, "#password:") != NULL && strstr(buffer, "#name:")) {
                     buffer[valread] = '\0';
-                    send(sd , buffer , strlen(buffer) , 0 );
+                    printf("%s\n", buffer);
+                    printf("test %s", newLine);
+                    // send(sd , buffer , strlen(buffer) , 0 );
+
+                    send(sd, newLine, strlen(newLine), 0);
                     bzero(buffer, sizeof(buffer));
                 }
                 else{
                     buffer[valread] = '\0';
 
                     char notify[1024];
-                    snprintf(notify, sizeof notify, "\nMESSAGE RECIEVED FROM CLIENT # %d:", client_number);
+                
+                    now = time(NULL);
+                    now_tm = localtime(&now);
+                    snprintf(notify, sizeof notify, "CLIENT # %d (%i:%i:%i):", client_number, now_tm->tm_hour, now_tm->tm_min, now_tm->tm_sec);
+                    // send(sd, newLine, strlen(newLine), 0);
                     notify[sizeof(notify) - 1] = '\0';
 
                     // THIS IS THE SEND
+
                     for(k=0;k<num_clients;k++){
                         sd = client_socket[k];
+                        printf("%i\n", sd);
                         //send message
 
                         //uncomment this for testing
-                        //printf("Sending \"%s\" to client_socket[%d]\n", buffer, k);
+                        printf("Sending \"%s\" to client_socket[%d]\n", buffer, k);
 
                         //print which client sent the message
                         send(sd, notify, strlen(notify), 0);
                         //print the message itself
+
                         send(sd , buffer , strlen(buffer) , 0 );
+                        
+                        send(sd, newLine, strlen(newLine), 0);
                     }
 
                     bzero(buffer, sizeof(buffer));
 
                 }
-            
-                //set the string terminating NULL byte on the end of the data read
-                
-                
-                // printf("%i\n", valread);
-                // printf("%s\n", buffer);
-                // send(sd , buffer , strlen(buffer) , 0 );
-                // bzero(buffer, sizeof(buffer));
             }
         }
    
